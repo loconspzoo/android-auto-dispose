@@ -20,26 +20,12 @@ apply plugin: 'signing'
 version = VERSION_NAME
 group = GROUP
 
-def isReleaseBuild() {
-  return VERSION_NAME.contains("SNAPSHOT") == false
-}
-
-def getReleaseRepositoryUrl() {
-  return hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL :
-      "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-}
-
-def getSnapshotRepositoryUrl() {
-  return hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL :
-      "https://oss.sonatype.org/content/repositories/snapshots/"
-}
-
 def getRepositoryUsername() {
-  return hasProperty('SONATYPE_NEXUS_USERNAME') ? SONATYPE_NEXUS_USERNAME : ""
+  return System.getenv("GITHUB_LOCON_PACKAGES_USERNAME") ?: System.getenv("GITHUB_ACTOR") ?: System.getenv("LOCON_ACTOR") ?: ""
 }
 
 def getRepositoryPassword() {
-  return hasProperty('SONATYPE_NEXUS_PASSWORD') ? SONATYPE_NEXUS_PASSWORD : ""
+  return System.getenv("GITHUB_LOCON_PACKAGES_TOKEN") ?: System.getenv("GITHUB_TOKEN") ?: System.getenv("LOCON_TOKEN") ?: ""
 }
 
 def kotlinAndroidArtifactTasks() {
@@ -150,10 +136,7 @@ afterEvaluate { project ->
         pom.artifactId = POM_ARTIFACT_ID
         pom.version = VERSION_NAME
 
-        repository(url: getReleaseRepositoryUrl()) {
-          authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
-        }
-        snapshotRepository(url: getSnapshotRepositoryUrl()) {
+        repository(url: "https://maven.pkg.github.com/loconspzoo/android-auto-dispose") {
           authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
         }
 
@@ -189,7 +172,7 @@ afterEvaluate { project ->
   }
 
   signing {
-    required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
+    required { gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
   }
 
